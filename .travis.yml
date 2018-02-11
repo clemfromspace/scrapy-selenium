@@ -26,15 +26,5 @@ script:
 - pytest --cov-config .coveragerc --cov=scrapy_selenium tests/
 - codeclimate-test-reporter
 
-deploy:
-  provider: pypi
-  user: clemfromspace
-  password:
-    secure: "TNv6olOrZXQU5uXOv2pXCHn0knCxCvyoIQJCNPVn7kwqrVhsUK+A9Tp0xBWkQugdtN30KQ9dPu7VNRfizyWvjBMXxnVmBwbjG/qUdPsa2jz4cgTNvfScBoTeESE8PkFu91xBmP9KXV0XYWVahEL6IK2klFqnFRhkpnDbeRgzSB+UUBzltb0CwIBs7r1BxI1Fcz4HkvEtoqOi/jB1GV7k2F2RIaXHNwnQ4b4Et3FzOX7y5ONUhlwtlgHfIsr3mtQkmQ0cRhzV6Sub9dwC0RckDjqRGd/cV81uWr444KK1F+XSxLU4M5+8am6zO3PDApkyYblfq54FzfbrmgrNaZ2VREVoS7SryW2cxmPPTQbBaaKAu8AZ6HIDgYzDGk54Q8W8XvK0UdAj9fPvFNHuOTJw/1HPGUcLcIDJebBSdZzg5q9hPAOv2MK+fyqfyTx5AcMJnbvitSncT5qie+OX6ZPZrXphxBv29PUPNv94f4czMk1gTvuxVyOPwP3qkyDMA2thRu/SXtE+EW/q1M9lQCXAxBU+wi+QDydxCbYs8rmF0V+dCaOdZEcEtE03l73BK8/MczX4sP3HkcoAsttkD8oXoCdo8I2nxeVqx2YlI6928ayxospLzMQQlaCy4zfAYrYyE5VqEDoS84fxJkO4aHJJDRSFJ90U0BwwLkBVRsa4t8U="
-  on:
-    tags: true
-    distributions: sdist bdist_wheel
-    repo: clemfromspace/scrapy-selenium
-
 notifications:
   email: false
