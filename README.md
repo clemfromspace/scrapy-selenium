@@ -13,7 +13,12 @@ You will also need one of the Selenium [compatible browsers](http://www.selenium
 ## Configuration
 1. Add the browser to use, the path to the executable, and the arguments to pass to the executable to the scrapy settings:
     ```python
-    from shutil import which
+    try:
+    	# python 3
+    	from shutil import which
+    except ImportError:
+    	# python 2
+    	from distutils.spawn import find_executable as which
 
     SELENIUM_DRIVER_NAME='firefox'
     SELENIUM_DRIVER_EXECUTABLE_PATH=which('geckodriver')
