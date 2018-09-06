@@ -73,7 +73,7 @@ class SeleniumMiddleware:
         """Process a request using the selenium driver if applicable"""
 
         if not isinstance(request, SeleniumRequest):
-            return request
+            return None
 
         self.driver.get(request.url)
 
