@@ -69,17 +69,16 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
         mocked_quit.assert_called_once()
 
-    def test_process_request_should_return_the_request_if_not_selenium_request(self):
-        """Test that the ``process_request`` should return a request if not selenium request"""
+    def test_process_request_should_return_none_if_not_selenium_request(self):
+        """Test that the ``process_request`` should return none if not selenium request"""
 
         scrapy_request = Request(url='http://not-an-url')
 
-        self.assertEqual(
+        self.assertIsNone(
             self.selenium_middleware.process_request(
                 request=scrapy_request,
                 spider=None
-            ),
-            scrapy_request
+            )
         )
 
     def test_process_request_should_return_a_response_if_selenium_request(self):
