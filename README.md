@@ -57,8 +57,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 yield SeleniumRequest(
-    url,
-    self.parse_result,
+    url=url,
+    callback=self.parse_result,
     wait_time=10,
     wait_until=EC.element_to_be_clickable((By.ID, 'someid'))
 )
@@ -68,8 +68,8 @@ yield SeleniumRequest(
 When used, selenium will take a screenshot of the page and the binary data of the .png captured will be added to the response `meta`:
 ```python
 yield SeleniumRequest(
-    url,
-    self.parse_result,
+    url=url,
+    callback=self.parse_result,
     screenshot=True
 )
 
