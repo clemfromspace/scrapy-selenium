@@ -1,5 +1,4 @@
 """This module contains the ``SeleniumMiddleware`` scrapy middleware"""
-
 from importlib import import_module
 
 from scrapy import signals
@@ -13,7 +12,7 @@ from .http import SeleniumRequest
 class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
-    def __init__(self, driver_name, driver_executable_path, driver_arguments):
+    def __init__(self, driver_name, driver_executable_path, driver_arguments, driver_preferences):
         """Initialize the selenium webdriver
 
         Parameters
@@ -24,24 +23,29 @@ class SeleniumMiddleware:
             The path of the executable binary of the driver
         driver_arguments: list
             A list of arguments to initialize the driver
+        driver_preferences: list of tuple
+            A list of tuples specifying preferences to initialize the driver. Tuple should be of form: (name, value).
 
         """
 
-        webdriver_base_path = f'selenium.webdriver.{driver_name}'
+        webdriver_base_path = 'selenium.webdriver.{}'.format(driver_name)
 
-        driver_klass_module = import_module(f'{webdriver_base_path}.webdriver')
+        driver_klass_module = import_module('{}.webdriver'.format(webdriver_base_path))
         driver_klass = getattr(driver_klass_module, 'WebDriver')
 
-        driver_options_module = import_module(f'{webdriver_base_path}.options')
+        driver_options_module = import_module('{}.options'.format(webdriver_base_path))
         driver_options_klass = getattr(driver_options_module, 'Options')
 
         driver_options = driver_options_klass()
         for argument in driver_arguments:
             driver_options.add_argument(argument)
 
+        for (pref_name, pref_value) in driver_preferences:
+            driver_options.set_preference(pref_name, pref_value)
+
         driver_kwargs = {
             'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
+            '{}_options'.format(driver_name): driver_options
         }
 
         self.driver = driver_klass(**driver_kwargs)
@@ -53,6 +57,7 @@ class SeleniumMiddleware:
         driver_name = crawler.settings.get('SELENIUM_DRIVER_NAME')
         driver_executable_path = crawler.settings.get('SELENIUM_DRIVER_EXECUTABLE_PATH')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
+        driver_preferences = crawler.settings.get('SELENIUM_DRIVER_PREFERENCES')
 
         if not driver_name or not driver_executable_path:
             raise NotConfigured(
@@ -62,7 +67,8 @@ class SeleniumMiddleware:
         middleware = cls(
             driver_name=driver_name,
             driver_executable_path=driver_executable_path,
-            driver_arguments=driver_arguments
+            driver_arguments=driver_arguments,
+            driver_preferences=driver_preferences
         )
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
@@ -109,4 +115,3 @@ class SeleniumMiddleware:
         """Shutdown the driver when spider is closed"""
 
         self.driver.quit()
-
