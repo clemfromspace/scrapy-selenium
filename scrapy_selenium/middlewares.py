@@ -13,7 +13,8 @@ from .http import SeleniumRequest
 class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
-    def __init__(self, driver_name, driver_executable_path, driver_arguments):
+    def __init__(self, driver_name, driver_executable_path, driver_arguments,
+        browser_executable_path):
         """Initialize the selenium webdriver
 
         Parameters
@@ -24,7 +25,8 @@ class SeleniumMiddleware:
             The path of the executable binary of the driver
         driver_arguments: list
             A list of arguments to initialize the driver
-
+        browser_executable_path: str
+            The path of the executable binary of the browser
         """
 
         webdriver_base_path = f'selenium.webdriver.{driver_name}'
@@ -36,6 +38,8 @@ class SeleniumMiddleware:
         driver_options_klass = getattr(driver_options_module, 'Options')
 
         driver_options = driver_options_klass()
+        if browser_executable_path:
+            driver_options.binary_location = browser_executable_path
         for argument in driver_arguments:
             driver_options.add_argument(argument)
 
@@ -52,6 +56,7 @@ class SeleniumMiddleware:
 
         driver_name = crawler.settings.get('SELENIUM_DRIVER_NAME')
         driver_executable_path = crawler.settings.get('SELENIUM_DRIVER_EXECUTABLE_PATH')
+        browser_executable_path = crawler.settings.get('SELENIUM_BROWSER_EXECUTABLE_PATH')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
 
         if not driver_name or not driver_executable_path:
@@ -62,7 +67,8 @@ class SeleniumMiddleware:
         middleware = cls(
             driver_name=driver_name,
             driver_executable_path=driver_executable_path,
-            driver_arguments=driver_arguments
+            driver_arguments=driver_arguments,
+            browser_executable_path=browser_executable_path
         )
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
