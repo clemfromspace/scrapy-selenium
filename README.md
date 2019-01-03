@@ -11,13 +11,18 @@ You should use **python>=3.6**.
 You will also need one of the Selenium [compatible browsers](http://www.seleniumhq.org/about/platforms.jsp).
 
 ## Configuration
-1. Add the browser to use, the path to the executable, and the arguments to pass to the executable to the scrapy settings:
+1. Add the browser to use, the path to the driver executable, and the arguments to pass to the executable to the scrapy settings:
     ```python
     from shutil import which
 
-    SELENIUM_DRIVER_NAME='firefox'
-    SELENIUM_DRIVER_EXECUTABLE_PATH=which('geckodriver')
+    SELENIUM_DRIVER_NAME = 'firefox'
+    SELENIUM_DRIVER_EXECUTABLE_PATH = which('geckodriver')
     SELENIUM_DRIVER_ARGUMENTS=['-headless']  # '--headless' if using chrome instead of firefox
+    ```
+
+Optionally, set the path to the browser executable:
+    ```python
+    SELENIUM_BROWSER_EXECUTABLE_PATH = which('firefox')
     ```
 
 2. Add the `SeleniumMiddleware` to the downloader middlewares:
