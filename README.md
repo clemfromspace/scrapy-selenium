@@ -38,10 +38,10 @@ from scrapy_selenium import SeleniumRequest
 
 yield SeleniumRequest(url, self.parse_result)
 ```
-The request will be handled by selenium, and the response will have an additional `meta` key, named `driver` containing the selenium driver with the request processed.
+The request will be handled by selenium, and the request will have an additional `meta` key, named `driver` containing the selenium driver with the request processed.
 ```python
 def parse_result(self, response):
-    print(response.meta['driver'].title)
+    print(response.request.meta['driver'].title)
 ```
 For more information about the available driver methods and attributes, refer to the [selenium python documentation](http://selenium-python.readthedocs.io/api.html#module-selenium.webdriver.remote.webdriver)
 
