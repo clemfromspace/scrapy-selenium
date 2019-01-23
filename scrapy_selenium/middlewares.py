@@ -99,6 +99,9 @@ class SeleniumMiddleware:
         if request.screenshot:
             request.meta['screenshot'] = self.driver.get_screenshot_as_png()
 
+        if request.script:
+            self.driver.execute_script(request.script)
+
         body = str.encode(self.driver.page_source)
 
         # Expose the driver via the "meta" attribute
