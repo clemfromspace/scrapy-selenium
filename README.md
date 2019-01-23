@@ -84,7 +84,7 @@ def parse_result(self, response):
 ```
 
 #### `script`
-When used, selenium will execute a custom JavaScript code.
+When used, selenium will execute custom JavaScript code.
 ```python
 yield SeleniumRequest(
     url,
