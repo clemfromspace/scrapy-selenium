@@ -117,3 +117,21 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
         )
 
         self.assertIsNotNone(html_response.meta['screenshot'])
+
+    def test_process_request_should_execute_script_if_script_option(self):
+        """Test that the ``process_request`` should execute the script and return a response"""
+
+        selenium_request = SeleniumRequest(
+            url='http://www.python.org',
+            script='document.title = "scrapy_selenium";'
+        )
+
+        html_response = self.selenium_middleware.process_request(
+            request=selenium_request,
+            spider=None
+        )
+
+        self.assertEqual(
+            html_response.selector.xpath('//title/text()').extract_first(),
+            'scrapy_selenium'
+        )

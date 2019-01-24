@@ -38,10 +38,10 @@ from scrapy_selenium import SeleniumRequest
 
 yield SeleniumRequest(url, self.parse_result)
 ```
-The request will be handled by selenium, and the response will have an additional `meta` key, named `driver` containing the selenium driver with the request processed.
+The request will be handled by selenium, and the request will have an additional `meta` key, named `driver` containing the selenium driver with the request processed.
 ```python
 def parse_result(self, response):
-    print(response.meta['driver'].title)
+    print(response.request.meta['driver'].title)
 ```
 For more information about the available driver methods and attributes, refer to the [selenium python documentation](http://selenium-python.readthedocs.io/api.html#module-selenium.webdriver.remote.webdriver)
 
@@ -52,7 +52,7 @@ def parse_result(self, response):
 ```
 
 ### Additional arguments
-The `scrapy_selenium.SeleniumRequest` accept 3 additional arguments:
+The `scrapy_selenium.SeleniumRequest` accept 4 additional arguments:
 
 #### `wait_time` / `wait_until`
 
@@ -80,6 +80,15 @@ yield SeleniumRequest(
 
 def parse_result(self, response):
     with open('image.png', 'wb') as image_file:
-        image_file.write(response.meta['screenshot])
+        image_file.write(response.meta['screenshot'])
 ```
 
+#### `script`
+When used, selenium will execute custom JavaScript code.
+```python
+yield SeleniumRequest(
+    url,
+    self.parse_result,
+    script='window.scrollTo(0, document.body.scrollHeight);',
+)
+```
