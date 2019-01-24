@@ -52,7 +52,7 @@ def parse_result(self, response):
 ```
 
 ### Additional arguments
-The `scrapy_selenium.SeleniumRequest` accept 3 additional arguments:
+The `scrapy_selenium.SeleniumRequest` accept 4 additional arguments:
 
 #### `wait_time` / `wait_until`
 
@@ -80,6 +80,15 @@ yield SeleniumRequest(
 
 def parse_result(self, response):
     with open('image.png', 'wb') as image_file:
-        image_file.write(response.meta['screenshot])
+        image_file.write(response.meta['screenshot'])
 ```
 
+#### `script`
+When used, selenium will execute custom JavaScript code.
+```python
+yield SeleniumRequest(
+    url,
+    self.parse_result,
+    script='window.scrollTo(0, document.body.scrollHeight);',
+)
+```
