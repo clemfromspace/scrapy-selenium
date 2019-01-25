@@ -14,6 +14,9 @@ install:
 - pip install -r requirements/requirements-test.txt
 
 before_script:
+  - wget https://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar
+  - java -jar selenium-server-standalone-3.141.59.jar -role hub &>grid-server.log &
+  - java -jar selenium-server-standalone-3.141.59.jar -role node  -hub http://localhost:4444/grid/register &>grid-node.log &
   - wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux64.tar.gz
   - mkdir geckodriver
   - tar -xzf geckodriver-v0.11.1-linux64.tar.gz -C geckodriver
@@ -21,6 +24,7 @@ before_script:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3
+  - cat grid-node.log
 
 script:
 - pytest --cov-config .coveragerc --cov=scrapy_selenium tests/
