@@ -14,7 +14,7 @@ class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
     def __init__(self, driver_name, driver_executable_path, driver_arguments,
-        browser_executable_path):
+                 browser_executable_path):
         """Initialize the selenium webdriver
 
         Parameters
@@ -45,7 +45,7 @@ class SeleniumMiddleware:
 
         driver_kwargs = {
             'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
+            f'options': driver_options
         }
 
         self.driver = driver_klass(**driver_kwargs)
@@ -118,4 +118,3 @@ class SeleniumMiddleware:
         """Shutdown the driver when spider is closed"""
 
         self.driver.quit()
-
