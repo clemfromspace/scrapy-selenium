@@ -54,6 +54,7 @@ class SeleniumMiddlewareTestCase(TestCase):
         crawler = get_crawler(Spider, self.settings)
         mw = SeleniumMiddleware.from_crawler(crawler)
 
+        mw.driver.get('http://www.python.org')
         self.assertIn('Python', mw.driver.title)
 
         mw.driver.close()
