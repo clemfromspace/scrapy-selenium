@@ -4,6 +4,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from scrapy import Request, Spider
+from scrapy.exceptions import NotConfigured
 from scrapy.settings import Settings
 from scrapy.utils.test import get_crawler
 
@@ -20,7 +21,6 @@ class SeleniumMiddlewareTestCase(TestCase):
             'SELENIUM_DRIVER_NAME': 'firefox',
             'SELENIUM_DRIVER_EXECUTABLE_PATH': which('geckodriver'),
             'SELENIUM_DRIVER_ARGUMENTS': ['-headless']
-            # 'SELENIUM_DRIVER_ARGUMENTS': ['']
         })
 
         self.crawler = get_crawler(Spider, self.settings)
@@ -30,6 +30,30 @@ class SeleniumMiddlewareTestCase(TestCase):
     def tearDown(self):
         """Close the selenium webdriver"""
         self.mw.driver.quit()
+
+    def test_from_crawler_method_exception(self):
+        settings = Settings({'SELENIUM_DRIVER_ARGUMENTS': ['-headless']})
+        crawler = get_crawler(Spider, settings)
+        with self.assertRaisesRegex(NotConfigured, 'SELENIUM_DRIVER_NAME'):
+            SeleniumMiddleware.from_crawler(crawler)
+
+        settings.update({"SELENIUM_DRIVER_NAME": 'firefox'})
+        crawler = get_crawler(Spider, settings)
+        with self.assertRaisesRegex(NotConfigured, 'SELENIUM_DRIVER_EXECUTABLE_PATH'):
+            SeleniumMiddleware.from_crawler(crawler)
+
+        settings.update({'SELENIUM_DRIVER_EXECUTABLE_PATH': which('geckodriver')})
+        crawler = get_crawler(Spider, settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
+        mw.driver.quit()
+
+    def test_from_crawler_method_via_browser_executable_path(self):
+        self.settings.update({'SELENIUM_DRIVER_NAME': 'firefox'})
+        self.settings.update({'SELENIUM_BROWSER_EXECUTABLE_PATH': which('firefox')})
+        crawler = get_crawler(Spider, self.settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
+        self.assertEqual(which('firefox'), mw.driver.binary._start_cmd)
+        mw.driver.close()
 
     def test_from_crawler_method_should_initialize_the_driver(self):
         """Test that the ``from_crawler`` method should initialize the selenium driver"""

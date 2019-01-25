@@ -69,9 +69,13 @@ class SeleniumMiddleware:
 
         grid_url = crawler.settings.get('SELENIUM_REMOTE_URL', None)
 
-        if not driver_name or not driver_executable_path:
+        if not driver_name:
             raise NotConfigured(
-                'SELENIUM_DRIVER_NAME and SELENIUM_DRIVER_EXECUTABLE_PATH must be set'
+                'SELENIUM_DRIVER_NAME must be set'
+            )
+        if not(driver_executable_path or grid_url):
+            raise NotConfigured(
+                'SELENIUM_DRIVER_EXECUTABLE_PATH or SELENIUM_REMOTE_URL  must set one'
             )
 
         middleware = cls(
