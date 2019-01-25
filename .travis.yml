@@ -30,7 +30,7 @@ before_script:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - wget https://download-installer.cdn.mozilla.net/pub/firefox/releases/64.0.2/linux-x86_64/en-US/firefox-64.0.2.tar.bz2
-  - tar -zxf firefox-64.0.2.tar.bz2
+  - tar -jxf firefox-64.0.2.tar.bz2
   - export PATH=$PATH:$PWD/firefox
   - sleep 3
 
