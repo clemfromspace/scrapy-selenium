@@ -71,7 +71,7 @@ class SeleniumMiddlewareTestCase(TestCase):
         mw.driver.close()
 
     def test_from_crawler_method_should_initialize_the_grid(self):
-        """"""
+        """Test that the ``from_crawler`` method should initialize the selenium grid"""
         self.settings.update({
             'SELENIUM_REMOTE_URL': 'http://localhost:4444/wd/hub'
         })
