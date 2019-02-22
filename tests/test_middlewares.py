@@ -135,3 +135,40 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
             html_response.selector.xpath('//title/text()').extract_first(),
             'scrapy_selenium'
         )
+
+    def test_max_concurrent_driver(self):
+        """Test that up to max_concurrent_driver should be alive. Evicted driver should be closed."""
+        SeleniumRequest(
+            url='http://www.python.org',
+            meta={'proxy': 'http://1.1.1.1'}
+        )
+        self.assertEqual(len(self.selenium_middleware.drivers), 1)
+        driver1 = self.selenium_middleware.drivers['http://1.1.1.1']
+        SeleniumRequest(
+            url='http://www.python.org',
+            meta={'proxy': 'http://1.1.1.2'}
+        )
+        self.assertEqual(len(self.selenium_middleware.drivers), 2)
+        SeleniumRequest(
+            url='http://www.python.org',
+            meta={'proxy': 'http://1.1.1.3'}
+        )
+        # one of the driver is evicted
+        self.assertEqual(len(self.selenium_middleware.drivers), 2)
+        # when driver quites, the session id will be None
+        self.assertEqual(driver1.session_id, None)
+
+    def test_same_proxy_should_reuse_driver(self):
+        SeleniumRequest(
+            url='http://www.python.org',
+            meta={'proxy': 'http://1.1.1.1'}
+        )
+        self.assertEqual(len(self.selenium_middleware.drivers), 1)
+        driver1 = self.selenium_middleware.drivers['http://1.1.1.1']
+        SeleniumRequest(
+            url='http://www.python.org',
+            meta={'proxy': 'http://1.1.1.1'}
+        )
+        self.assertEqual(len(self.selenium_middleware.drivers), 1)
+        driver2 = self.selenium_middleware.drivers['http://1.1.1.1']
+        self.assertEqual(driver1.session_id, driver2.session_id)
