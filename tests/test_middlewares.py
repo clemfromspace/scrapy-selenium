@@ -33,26 +33,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
         super().tearDownClass()
 
-        cls.selenium_middleware.driver.quit()
-
-    def test_from_crawler_method_should_initialize_the_driver(self):
-        """Test that the ``from_crawler`` method should initialize the selenium driver"""
-
-        crawler = Crawler(
-            spidercls=self.spider_klass,
-            settings=self.settings
-        )
-
-        selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
-
-        # The driver must be initialized
-        self.assertIsNotNone(selenium_middleware.driver)
-
-        # We can now use the driver
-        selenium_middleware.driver.get('http://www.python.org')
-        self.assertIn('Python', selenium_middleware.driver.title)
-
-        selenium_middleware.driver.close()
+        cls.selenium_middleware.spider_closed()
 
     def test_spider_closed_should_close_the_driver(self):
         """Test that the ``spider_closed`` method should close the driver"""
@@ -64,10 +45,9 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
         selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
 
-        with patch.object(selenium_middleware.driver, 'quit') as mocked_quit:
-            selenium_middleware.spider_closed()
-
-        mocked_quit.assert_called_once()
+        mocked_quit = [patch.object(driver, 'quit') for driver in selenium_middleware.drivers]
+        for q in mocked_quit:
+            q.assert_called_once()
 
     def test_process_request_should_return_none_if_not_selenium_request(self):
         """Test that the ``process_request`` should return none if not selenium request"""
@@ -138,37 +118,37 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
     def test_max_concurrent_driver(self):
         """Test that up to max_concurrent_driver should be alive. Evicted driver should be closed."""
-        SeleniumRequest(
+        self.selenium_middleware.process_request(SeleniumRequest(
             url='http://www.python.org',
             meta={'proxy': 'http://1.1.1.1'}
-        )
+        ))
         self.assertEqual(len(self.selenium_middleware.drivers), 1)
         driver1 = self.selenium_middleware.drivers['http://1.1.1.1']
-        SeleniumRequest(
+        self.selenium_middleware.process_request(SeleniumRequest(
             url='http://www.python.org',
             meta={'proxy': 'http://1.1.1.2'}
-        )
+        ))
         self.assertEqual(len(self.selenium_middleware.drivers), 2)
-        SeleniumRequest(
+        self.selenium_middleware.process_request(SeleniumRequest(
             url='http://www.python.org',
             meta={'proxy': 'http://1.1.1.3'}
-        )
+        ))
         # one of the driver is evicted
         self.assertEqual(len(self.selenium_middleware.drivers), 2)
         # when driver quites, the session id will be None
         self.assertEqual(driver1.session_id, None)
 
     def test_same_proxy_should_reuse_driver(self):
-        SeleniumRequest(
+        self.selenium_middleware.process_request(SeleniumRequest(
             url='http://www.python.org',
             meta={'proxy': 'http://1.1.1.1'}
-        )
+        ))
         self.assertEqual(len(self.selenium_middleware.drivers), 1)
         driver1 = self.selenium_middleware.drivers['http://1.1.1.1']
-        SeleniumRequest(
+        self.selenium_middleware.process_request(SeleniumRequest(
             url='http://www.python.org',
             meta={'proxy': 'http://1.1.1.1'}
-        )
+        ))
         self.assertEqual(len(self.selenium_middleware.drivers), 1)
         driver2 = self.selenium_middleware.drivers['http://1.1.1.1']
         self.assertEqual(driver1.session_id, driver2.session_id)
