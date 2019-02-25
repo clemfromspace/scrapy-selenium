@@ -1,7 +1,7 @@
 # Scrapy with selenium
 [![PyPI](https://img.shields.io/pypi/v/scrapy-selenium.svg)](https://pypi.python.org/pypi/scrapy-selenium) [![Build Status](https://travis-ci.org/clemfromspace/scrapy-selenium.svg?branch=master)](https://travis-ci.org/clemfromspace/scrapy-selenium) [![Test Coverage](https://api.codeclimate.com/v1/badges/5c737098dc38a835ff96/test_coverage)](https://codeclimate.com/github/clemfromspace/scrapy-selenium/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/5c737098dc38a835ff96/maintainability)](https://codeclimate.com/github/clemfromspace/scrapy-selenium/maintainability)
 
-Scrapy middleware to handle javascript pages using selenium.
+Scrapy middleware to handle javascript pages using selenium with better proxy support.
 
 ## Installation
 ```
@@ -18,6 +18,7 @@ You will also need one of the Selenium [compatible browsers](http://www.selenium
     SELENIUM_DRIVER_NAME = 'firefox'
     SELENIUM_DRIVER_EXECUTABLE_PATH = which('geckodriver')
     SELENIUM_DRIVER_ARGUMENTS=['-headless']  # '--headless' if using chrome instead of firefox
+    SELENIUM_DRIVER_MAX_CONCURRENT=8  # maximal number of driver to be running concurrently. By default, it is 8.
     ```
 
 Optionally, set the path to the browser executable:
@@ -36,7 +37,7 @@ Use the `scrapy_selenium.SeleniumRequest` instead of the scrapy built-in `Reques
 ```python
 from scrapy_selenium import SeleniumRequest
 
-yield SeleniumRequest(url, self.parse_result)
+yield SeleniumRequest(url, self.parse_result, meta={'proxy': 'some proxt url here'})
 ```
 The request will be handled by selenium, and the request will have an additional `meta` key, named `driver` containing the selenium driver with the request processed.
 ```python
@@ -92,3 +93,15 @@ yield SeleniumRequest(
     script='window.scrollTo(0, document.body.scrollHeight);',
 )
 ```
+
+#### `proxy`
+
+```python
+from scrapy_selenium import SeleniumRequest
+
+yield SeleniumRequest(url, self.parse_result, meta={'proxy': 'your proxy url here'})
+```
+
+Here you can provide your proxy to the request. If the proxy has already used, the existing Selenium driver with that proxy will be used (if not yet evicted from the driver list); otherwise, a new driver with that proxy will be created instead.
+
+Internally, we use a LRU cache to track the active drivers.
