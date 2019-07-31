@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from scrapy import Request
 from scrapy.crawler import Crawler
-
 from scrapy_selenium.http import SeleniumRequest
 from scrapy_selenium.middlewares import SeleniumMiddleware
 

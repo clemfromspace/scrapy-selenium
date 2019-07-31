@@ -1,6 +1,7 @@
 """This module contains the packaging routine for the pybook package"""
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 try:
     from pip.download import PipSession
     from pip.req import parse_requirements
@@ -30,5 +31,3 @@ setup(
     packages=find_packages(),
     install_requires=get_requirements('requirements/requirements.txt')
 )
-
-
