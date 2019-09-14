@@ -36,7 +36,7 @@ Use the `scrapy_selenium.SeleniumRequest` instead of the scrapy built-in `Reques
 ```python
 from scrapy_selenium import SeleniumRequest
 
-yield SeleniumRequest(url, self.parse_result)
+yield SeleniumRequest(url=url, callback=self.parse_result)
 ```
 The request will be handled by selenium, and the request will have an additional `meta` key, named `driver` containing the selenium driver with the request processed.
 ```python
@@ -62,8 +62,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 yield SeleniumRequest(
-    url,
-    self.parse_result,
+    url=url,
+    callback=self.parse_result,
     wait_time=10,
     wait_until=EC.element_to_be_clickable((By.ID, 'someid'))
 )
@@ -73,8 +73,8 @@ yield SeleniumRequest(
 When used, selenium will take a screenshot of the page and the binary data of the .png captured will be added to the response `meta`:
 ```python
 yield SeleniumRequest(
-    url,
-    self.parse_result,
+    url=url,
+    callback=self.parse_result,
     screenshot=True
 )
 
@@ -87,8 +87,8 @@ def parse_result(self, response):
 When used, selenium will execute custom JavaScript code.
 ```python
 yield SeleniumRequest(
-    url,
-    self.parse_result,
+    url=url,
+    callback=self.parse_result,
     script='window.scrollTo(0, document.body.scrollHeight);',
 )
 ```
