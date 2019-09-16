@@ -2,10 +2,11 @@
 
 from importlib import import_module
 
+from selenium.webdriver.support.ui import WebDriverWait
+
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
 from scrapy.http import HtmlResponse
-from selenium.webdriver.support.ui import WebDriverWait
 
 from .http import SeleniumRequest
 
@@ -14,7 +15,7 @@ class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
     def __init__(self, driver_name, driver_executable_path, driver_arguments,
-        browser_executable_path):
+                 browser_executable_path):
         """Initialize the selenium webdriver
 
         Parameters
@@ -55,8 +56,10 @@ class SeleniumMiddleware:
         """Initialize the middleware with the crawler settings"""
 
         driver_name = crawler.settings.get('SELENIUM_DRIVER_NAME')
-        driver_executable_path = crawler.settings.get('SELENIUM_DRIVER_EXECUTABLE_PATH')
-        browser_executable_path = crawler.settings.get('SELENIUM_BROWSER_EXECUTABLE_PATH')
+        driver_executable_path = crawler.settings.get(
+            'SELENIUM_DRIVER_EXECUTABLE_PATH')
+        browser_executable_path = crawler.settings.get(
+            'SELENIUM_BROWSER_EXECUTABLE_PATH')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
 
         if not driver_name or not driver_executable_path:
@@ -71,7 +74,8 @@ class SeleniumMiddleware:
             browser_executable_path=browser_executable_path
         )
 
-        crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
+        crawler.signals.connect(
+            middleware.spider_closed, signals.spider_closed)
 
         return middleware
 
@@ -118,4 +122,3 @@ class SeleniumMiddleware:
         """Shutdown the driver when spider is closed"""
 
         self.driver.quit()
-
