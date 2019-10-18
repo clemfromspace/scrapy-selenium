@@ -14,7 +14,7 @@ class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
     def __init__(self, driver_name, driver_executable_path, driver_arguments,
-        browser_executable_path):
+                 driver_preferences, browser_executable_path):
         """Initialize the selenium webdriver
 
         Parameters
@@ -25,6 +25,8 @@ class SeleniumMiddleware:
             The path of the executable binary of the driver
         driver_arguments: list
             A list of arguments to initialize the driver
+        driver_preferences: list
+            A dict of preferences to configure the drivers profile
         browser_executable_path: str
             The path of the executable binary of the browser
         """
@@ -33,6 +35,14 @@ class SeleniumMiddleware:
 
         driver_klass_module = import_module(f'{webdriver_base_path}.webdriver')
         driver_klass = getattr(driver_klass_module, 'WebDriver')
+
+        driver_profile_klass = getattr(
+            driver_klass_module, f'{driver_name.capitalize()}Profile')
+        driver_profile = driver_profile_klass()
+
+        for key, value in driver_preferences.items():
+            driver_profile.set_preference(key, value)
+            driver_profile.update_preferences()
 
         driver_options_module = import_module(f'{webdriver_base_path}.options')
         driver_options_klass = getattr(driver_options_module, 'Options')
@@ -45,9 +55,9 @@ class SeleniumMiddleware:
 
         driver_kwargs = {
             'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
+            f'{driver_name}_options': driver_options,
+            f'{driver_name}_profile': driver_profile,
         }
-
         self.driver = driver_klass(**driver_kwargs)
 
     @classmethod
@@ -58,6 +68,7 @@ class SeleniumMiddleware:
         driver_executable_path = crawler.settings.get('SELENIUM_DRIVER_EXECUTABLE_PATH')
         browser_executable_path = crawler.settings.get('SELENIUM_BROWSER_EXECUTABLE_PATH')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
+        driver_preferences = crawler.settings.get('SELENIUM_DRIVER_PREFERENCES')
 
         if not driver_name or not driver_executable_path:
             raise NotConfigured(
@@ -68,6 +79,7 @@ class SeleniumMiddleware:
             driver_name=driver_name,
             driver_executable_path=driver_executable_path,
             driver_arguments=driver_arguments,
+            driver_preferences=driver_preferences,
             browser_executable_path=browser_executable_path
         )
 
@@ -118,4 +130,3 @@ class SeleniumMiddleware:
         """Shutdown the driver when spider is closed"""
 
         self.driver.quit()
-
