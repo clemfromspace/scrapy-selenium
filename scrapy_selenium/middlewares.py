@@ -29,7 +29,7 @@ class SeleniumMiddleware(object):
         browser_executable_path: str
             The path of the executable binary of the browser
         command_executor: str
-            The selenium remote server end-point by default is using ``http://localhost:4444/wd/hub``
+            The selenium remote server end-point by default is using ``http://127.0.0.1:4444/wd/hub``
         """
 
         driver_name = kwargs.get('driver_name', None)
