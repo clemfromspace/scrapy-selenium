@@ -10,15 +10,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from .http import SeleniumRequest
 
 
-class SeleniumMiddleware:
+class SeleniumMiddleware(object):
     """Scrapy middleware handling the requests using selenium"""
 
-    def __init__(self, driver_name, driver_executable_path, driver_arguments,
-        browser_executable_path):
+    def __init__(self, *args, **kwargs):
         """Initialize the selenium webdriver
 
         Parameters
         ----------
+        driver_type: str
+            The selenium with executeable or remote driver [``executeable``, ``remote``]
         driver_name: str
             The selenium ``WebDriver`` to use
         driver_executable_path: str
@@ -27,47 +28,77 @@ class SeleniumMiddleware:
             A list of arguments to initialize the driver
         browser_executable_path: str
             The path of the executable binary of the browser
+        command_executor: str
+            The selenium remote server end-point by default is using ``http://localhost:4444/wd/hub``
         """
 
-        webdriver_base_path = f'selenium.webdriver.{driver_name}'
+        driver_name = kwargs.get('driver_name', None)
+        driver_type = kwargs.get('driver_type', 'executeable') # [executeable, remote]
+        driver_executable_path = kwargs.get('driver_executable_path', None)
+        browser_executable_path = kwargs.get('browser_executable_path', None)
+        command_executor = kwargs.get('command_executor', 'http://127.0.0.1:4444/wd/hub')
+        driver_arguments = kwargs.get('driver_arguments', None)
+
+        webdriver_base_path = f'selenium.webdriver.{driver_name.lower()}'
 
         driver_klass_module = import_module(f'{webdriver_base_path}.webdriver')
-        driver_klass = getattr(driver_klass_module, 'WebDriver')
-
+        driver_klass = { 
+            'executable': getattr(driver_klass_module, 'WebDriver'),
+            'remote': getattr(driver_klass_module, 'RemoteWebDriver')
+        }
         driver_options_module = import_module(f'{webdriver_base_path}.options')
         driver_options_klass = getattr(driver_options_module, 'Options')
+        
+        desired_capabilities_klass = getattr(driver_options_module, 'DesiredCapabilities')
+        desired_capabilities = getattr(desired_capabilities_klass, driver_name.upper())
 
         driver_options = driver_options_klass()
         if browser_executable_path:
             driver_options.binary_location = browser_executable_path
         for argument in driver_arguments:
             driver_options.add_argument(argument)
-
+        
         driver_kwargs = {
-            'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
+            'executeable': {
+                'executable_path': driver_executable_path,
+                f'{driver_name.lower()}_options': driver_options,
+            },
+            'remote': {
+                'command_executor': command_executor,
+                'desired_capabilities': desired_capabilities,
+                'options': driver_options
+            }
         }
 
-        self.driver = driver_klass(**driver_kwargs)
+        self.driver = driver_klass[driver_type](**driver_kwargs[driver_type])
 
     @classmethod
     def from_crawler(cls, crawler):
         """Initialize the middleware with the crawler settings"""
 
+        driver_type = crawler.settings.get('SELENIUM_DRIVER_TYPE')
         driver_name = crawler.settings.get('SELENIUM_DRIVER_NAME')
         driver_executable_path = crawler.settings.get('SELENIUM_DRIVER_EXECUTABLE_PATH')
         browser_executable_path = crawler.settings.get('SELENIUM_BROWSER_EXECUTABLE_PATH')
+        command_executor = crawler.settings.get('SELENIUM_COMMAND_EXECUTOR')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
 
-        if not driver_name or not driver_executable_path:
+        if not driver_type or not driver_name:
+             raise NotConfigured(
+                'SELENIUM_DRIVER_TYPE and SELENIUM_DRIVER_NAME must be set'
+            )
+
+        if not command_executor and not driver_executable_path:
             raise NotConfigured(
-                'SELENIUM_DRIVER_NAME and SELENIUM_DRIVER_EXECUTABLE_PATH must be set'
+                'SELENIUM_COMMAND_EXECUTOR or SELENIUM_DRIVER_EXECUTABLE_PATH must be set'
             )
 
         middleware = cls(
+            driver_type=driver_type,
             driver_name=driver_name,
             driver_executable_path=driver_executable_path,
             driver_arguments=driver_arguments,
+            command_executor=command_executor,
             browser_executable_path=browser_executable_path
         )
 
