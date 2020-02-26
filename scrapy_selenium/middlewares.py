@@ -60,6 +60,7 @@ class SeleniumMiddleware:
             self.driver = driver_klass(**driver_kwargs)
         # remote driver
         elif command_executor is not None:
+            from selenium import webdriver
             capabilities = driver_options.to_capabilities()
             self.driver = webdriver.Remote(command_executor=command_executor,
                                            desired_capabilities=capabilities)
@@ -77,7 +78,7 @@ class SeleniumMiddleware:
         if driver_name is None:
             raise NotConfigured('SELENIUM_DRIVER_NAME must be set')
 
-        if driver_executable_path is None or command_executor is None:
+        if driver_executable_path is None and command_executor is None:
             raise NotConfigured('Either SELENIUM_DRIVER_EXECUTABLE_PATH '
                                 'or SELENIUM_COMMAND_EXECUTOR must be set')
 
