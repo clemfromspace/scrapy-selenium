@@ -25,6 +25,11 @@ Optionally, set the path to the browser executable:
     SELENIUM_BROWSER_EXECUTABLE_PATH = which('firefox')
     ```
 
+In order to use a remote Selenium driver, specify `SELENIUM_COMMAND_EXECUTOR` instead of `SELENIUM_DRIVER_EXECUTABLE_PATH`:
+    ```python
+    SELENIUM_COMMAND_EXECUTOR = 'http://localhost:4444/wd/hub'
+    ```
+
 2. Add the `SeleniumMiddleware` to the downloader middlewares:
     ```python
     DOWNLOADER_MIDDLEWARES = {
