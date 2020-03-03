@@ -1,2 +1,0 @@
-scrapy>=1.0.0
-selenium>=3.9.0
