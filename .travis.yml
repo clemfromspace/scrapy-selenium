@@ -4,12 +4,12 @@ services:
 
 env:
   global:
-  - CODECLIMATE_REPO_TOKEN=a47935830d841ad61a6e960be8a3b6a5e557146ac010dafa993e61bf82898472
+    - CODECLIMATE_REPO_TOKEN=a47935830d841ad61a6e960be8a3b6a5e557146ac010dafa993e61bf82898472
 
 language: python
 
 python:
-- 3.6
+  - 3.6
 
 addons:
   firefox: "49.0.2"
@@ -20,10 +20,15 @@ before_script:
   - tar -xzf geckodriver-v0.11.1-linux64.tar.gz -C geckodriver
   - export PATH=$PATH:$PWD/geckodriver
   - "export DISPLAY=:99.0"
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 script:
-- python setup.py test
-- codeclimate-test-reporter
+  - python setup.py test
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 notifications:
   email: false
