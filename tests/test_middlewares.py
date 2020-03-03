@@ -1,6 +1,6 @@
 """This module contains the test cases for the middlewares of the ``scrapy_selenium`` package"""
 
-from unittest.mock import patch
+from unittest import mock
 
 from scrapy import Request
 from scrapy.crawler import Crawler
@@ -64,7 +64,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
         selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
 
-        with patch.object(selenium_middleware.driver, 'quit') as mocked_quit:
+        with mock.patch.object(selenium_middleware.driver, 'quit') as mocked_quit:
             selenium_middleware.spider_closed()
 
         mocked_quit.assert_called_once()
