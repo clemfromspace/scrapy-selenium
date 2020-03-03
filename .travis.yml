@@ -25,7 +25,7 @@ before_script:
   - "export DISPLAY=:99.0"
 
 script:
-- pytest --cov-config .coveragerc --cov=scrapy_selenium tests/
+- python setup.py test
 - codeclimate-test-reporter
 
 notifications:
