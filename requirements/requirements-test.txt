@@ -1,7 +1,0 @@
--r requirements.txt
-
-pytest==3.4.0
-coverage<4.4
-pytest-cov==2.4.0
-codeclimate-test-reporter==0.2.3
-attrs>=17.4.0
