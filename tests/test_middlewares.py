@@ -1,12 +1,13 @@
 """This module contains the test cases for the middlewares of the ``scrapy_selenium`` package"""
 
-from unittest.mock import patch
+from unittest import mock
 
 from scrapy import Request
 from scrapy.crawler import Crawler
 
 from scrapy_selenium.http import SeleniumRequest
 from scrapy_selenium.middlewares import SeleniumMiddleware
+from selenium.common.exceptions import TimeoutException
 
 from .test_cases import BaseScrapySeleniumTestCase
 
@@ -64,7 +65,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
         selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
 
-        with patch.object(selenium_middleware.driver, 'quit') as mocked_quit:
+        with mock.patch.object(selenium_middleware.driver, 'quit') as mocked_quit:
             selenium_middleware.spider_closed()
 
         mocked_quit.assert_called_once()
@@ -134,4 +135,52 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
         self.assertEqual(
             html_response.selector.xpath('//title/text()').extract_first(),
             'scrapy_selenium'
+        )
+
+    @mock.patch('scrapy_selenium.middlewares.WebDriverWait')
+    def test_process_request_should_use_wait_time_and_wait_until_when_available(self, WebDriverWait):
+        """Test that the ``process_request`` should execute the WebDriverWait from selenium"""
+
+        wait_time = 2
+        wait_until = mock.Mock()  # just a unique value to be checked in mock calling
+        selenium_request = SeleniumRequest(
+            url='http://www.python.org',
+            wait_time=wait_time,
+            wait_until=wait_until,
+        )
+
+        self.selenium_middleware.process_request(
+            request=selenium_request,
+            spider=None
+        )
+
+        WebDriverWait.assert_called_with(self.selenium_middleware.driver, wait_time)
+        WebDriverWait.return_value.until.assert_called_with(wait_until)
+
+    @mock.patch('scrapy_selenium.middlewares.WebDriverWait')
+    def test_process_request_should_still_return_content_if_wait_time_timeouts(self, WebDriverWait):
+        """Test that the ``process_request`` should execute the WebDriverWait from selenium"""
+        WebDriverWait.return_value.wait_until.side_effect = TimeoutException
+
+        wait_time = 2
+        wait_until = mock.Mock()  # just a unique value to be checked in mock calling
+        selenium_request = SeleniumRequest(
+            url='http://www.python.org',
+            wait_time=wait_time,
+            wait_until=wait_until,
+        )
+
+        html_response = self.selenium_middleware.process_request(
+            request=selenium_request,
+            spider=None
+        )
+
+        # The WebDriverWait was triggered and raised the exception...
+        WebDriverWait.assert_called_with(self.selenium_middleware.driver, wait_time)
+        WebDriverWait.return_value.until.assert_called_with(wait_until)
+
+        # But we fall into content anyway after the timeout
+        self.assertEqual(
+            html_response.selector.xpath('//title/text()').extract_first(),
+            'Welcome to Python.org'
         )
