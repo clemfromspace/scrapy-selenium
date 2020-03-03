@@ -135,3 +135,23 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
             html_response.selector.xpath('//title/text()').extract_first(),
             'scrapy_selenium'
         )
+
+    @mock.patch('scrapy_selenium.middlewares.WebDriverWait')
+    def test_process_request_should_use_wait_time_and_wait_until_when_available(self, WebDriverWait):
+        """Test that the ``process_request`` should execute the WebDriverWait from selenium"""
+
+        wait_time = 2
+        wait_until = mock.Mock()  # just a unique value to be checked in mock calling
+        selenium_request = SeleniumRequest(
+            url='http://www.python.org',
+            wait_time=wait_time,
+            wait_until=wait_until,
+        )
+
+        self.selenium_middleware.process_request(
+            request=selenium_request,
+            spider=None
+        )
+
+        WebDriverWait.assert_called_with(self.selenium_middleware.driver, wait_time)
+        WebDriverWait.return_value.until.assert_called_with(wait_until)
