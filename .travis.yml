@@ -1,6 +1,4 @@
 dist: xenial
-services:
-  - xvfb
 
 env:
   global:
@@ -11,8 +9,18 @@ language: python
 python:
 - 3.6
 
+services:
+  - docker
+  - xvfb
+
 addons:
   firefox: "49.0.2"
+
+before_install:
+  - docker network create selenium-grid
+  - docker run -d -p 4444:4444 --net selenium-grid --name selenium-hub selenium/hub:3.141.59-europium
+  - docker run -d --net selenium-grid -e HUB_HOST=selenium-hub -e NODE_MAX_INSTANCES=5 -v /dev/shm:/dev/shm selenium/node-firefox:3.141.59-europium
+  - docker ps -a
 
 install:
 - pip install -r requirements/requirements-test.txt
@@ -23,6 +31,12 @@ before_script:
   - tar -xzf geckodriver-v0.11.1-linux64.tar.gz -C geckodriver
   - export PATH=$PATH:$PWD/geckodriver
   - "export DISPLAY=:99.0"
+  - wget https://download-installer.cdn.mozilla.net/pub/firefox/releases/64.0.2/linux-x86_64/en-US/firefox-64.0.2.tar.bz2
+  - tar -jxf firefox-64.0.2.tar.bz2
+  - export PATH=$PATH:$PWD/firefox
+  - sleep 3
+
+
 
 script:
 - pytest --cov-config .coveragerc --cov=scrapy_selenium tests/

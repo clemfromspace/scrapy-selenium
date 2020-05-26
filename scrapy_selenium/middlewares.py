@@ -13,8 +13,9 @@ from .http import SeleniumRequest
 class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
-    def __init__(self, driver_name, driver_executable_path,
-        browser_executable_path, command_executor, driver_arguments):
+    def __init__(self, driver_name, driver_executable_path, command_executor,
+                 driver_arguments, browser_executable_path):
+
         """Initialize the selenium webdriver
 
         Parameters
@@ -23,18 +24,15 @@ class SeleniumMiddleware:
             The selenium ``WebDriver`` to use
         driver_executable_path: str
             The path of the executable binary of the driver
+        command_executor: str
+            Selenium remote server endpoint
         driver_arguments: list
             A list of arguments to initialize the driver
         browser_executable_path: str
             The path of the executable binary of the browser
-        command_executor: str
-            Selenium remote server endpoint
         """
 
         webdriver_base_path = f'selenium.webdriver.{driver_name}'
-
-        driver_klass_module = import_module(f'{webdriver_base_path}.webdriver')
-        driver_klass = getattr(driver_klass_module, 'WebDriver')
 
         driver_options_module = import_module(f'{webdriver_base_path}.options')
         driver_options_klass = getattr(driver_options_module, 'Options')
@@ -45,11 +43,6 @@ class SeleniumMiddleware:
             driver_options.binary_location = browser_executable_path
         for argument in driver_arguments:
             driver_options.add_argument(argument)
-
-        driver_kwargs = {
-            'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
-        }
 
         # locally installed driver
         if driver_executable_path is not None:
@@ -137,4 +130,3 @@ class SeleniumMiddleware:
         """Shutdown the driver when spider is closed"""
 
         self.driver.quit()
-

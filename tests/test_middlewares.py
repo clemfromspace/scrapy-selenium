@@ -1,71 +1,96 @@
 """This module contains the test cases for the middlewares of the ``scrapy_selenium`` package"""
-
+from shutil import which
+from unittest import TestCase
 from unittest.mock import patch
 
-from scrapy import Request
-from scrapy.crawler import Crawler
+from scrapy import Request, Spider
+from scrapy.exceptions import NotConfigured
+from scrapy.settings import Settings
+from scrapy.utils.test import get_crawler
 
 from scrapy_selenium.http import SeleniumRequest
 from scrapy_selenium.middlewares import SeleniumMiddleware
 
-from .test_cases import BaseScrapySeleniumTestCase
 
-
-class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
+class SeleniumMiddlewareTestCase(TestCase):
     """Test case for the ``SeleniumMiddleware`` middleware"""
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         """Initialize the middleware"""
+        self.settings = Settings({
+            'SELENIUM_DRIVER_NAME': 'firefox',
+            'SELENIUM_DRIVER_EXECUTABLE_PATH': which('geckodriver'),
+            'SELENIUM_DRIVER_ARGUMENTS': ['-headless']
+        })
 
-        super().setUpClass()
+        self.crawler = get_crawler(Spider, self.settings)
+        self.spider = self.crawler._create_spider('foo')
+        self.mw = SeleniumMiddleware.from_crawler(self.crawler)
 
-        crawler = Crawler(
-            spidercls=cls.spider_klass,
-            settings=cls.settings
-        )
-
-        cls.selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
-
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         """Close the selenium webdriver"""
+        self.mw.driver.quit()
 
-        super().tearDownClass()
+    def test_from_crawler_method_exception(self):
+        settings = Settings({'SELENIUM_DRIVER_ARGUMENTS': ['-headless']})
+        crawler = get_crawler(Spider, settings)
+        with self.assertRaisesRegex(NotConfigured, 'SELENIUM_DRIVER_NAME'):
+            SeleniumMiddleware.from_crawler(crawler)
 
-        cls.selenium_middleware.driver.quit()
+        settings.update({"SELENIUM_DRIVER_NAME": 'firefox'})
+        crawler = get_crawler(Spider, settings)
+        with self.assertRaisesRegex(NotConfigured, 'SELENIUM_DRIVER_EXECUTABLE_PATH'):
+            SeleniumMiddleware.from_crawler(crawler)
+
+        settings.update({'SELENIUM_DRIVER_EXECUTABLE_PATH': which('geckodriver')})
+        crawler = get_crawler(Spider, settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
+        mw.driver.quit()
+
+    def test_from_crawler_method_via_browser_executable_path(self):
+        self.settings.update({'SELENIUM_DRIVER_NAME': 'firefox'})
+        self.settings.update({'SELENIUM_BROWSER_EXECUTABLE_PATH': which('firefox')})
+        crawler = get_crawler(Spider, self.settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
+        self.assertEqual(which('firefox'), mw.driver.binary._start_cmd)
+        mw.driver.close()
 
     def test_from_crawler_method_should_initialize_the_driver(self):
         """Test that the ``from_crawler`` method should initialize the selenium driver"""
 
-        crawler = Crawler(
-            spidercls=self.spider_klass,
-            settings=self.settings
-        )
-
-        selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
+        crawler = get_crawler(Spider, self.settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
 
         # The driver must be initialized
-        self.assertIsNotNone(selenium_middleware.driver)
+        self.assertIsNotNone(mw.driver)
 
         # We can now use the driver
-        selenium_middleware.driver.get('http://www.python.org')
-        self.assertIn('Python', selenium_middleware.driver.title)
+        mw.driver.get('http://www.python.org')
+        self.assertIn('Python', mw.driver.title)
 
-        selenium_middleware.driver.close()
+        mw.driver.close()
+
+    def test_from_crawler_method_should_initialize_the_grid(self):
+        """Test that the ``from_crawler`` method should initialize the selenium grid"""
+        self.settings.update({
+            'SELENIUM_REMOTE_URL': 'http://localhost:4444/wd/hub'
+        })
+        crawler = get_crawler(Spider, self.settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
+
+        mw.driver.get('http://www.python.org')
+        self.assertIn('Python', mw.driver.title)
+
+        mw.driver.close()
 
     def test_spider_closed_should_close_the_driver(self):
         """Test that the ``spider_closed`` method should close the driver"""
 
-        crawler = Crawler(
-            spidercls=self.spider_klass,
-            settings=self.settings
-        )
+        crawler = get_crawler(Spider, self.settings)
+        mw = SeleniumMiddleware.from_crawler(crawler)
 
-        selenium_middleware = SeleniumMiddleware.from_crawler(crawler)
-
-        with patch.object(selenium_middleware.driver, 'quit') as mocked_quit:
-            selenium_middleware.spider_closed()
+        with patch.object(mw.driver, 'quit') as mocked_quit:
+            mw.spider_closed()
 
         mocked_quit.assert_called_once()
 
@@ -75,7 +100,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
         scrapy_request = Request(url='http://not-an-url')
 
         self.assertIsNone(
-            self.selenium_middleware.process_request(
+            self.mw.process_request(
                 request=scrapy_request,
                 spider=None
             )
@@ -86,7 +111,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
 
         selenium_request = SeleniumRequest(url='http://www.python.org')
 
-        html_response = self.selenium_middleware.process_request(
+        html_response = self.mw.process_request(
             request=selenium_request,
             spider=None
         )
@@ -94,7 +119,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
         # We have access to the driver on the response via the "meta"
         self.assertEqual(
             html_response.meta['driver'],
-            self.selenium_middleware.driver
+            self.mw.driver
         )
 
         # We also have access to the "selector" attribute on the response
@@ -111,7 +136,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
             screenshot=True
         )
 
-        html_response = self.selenium_middleware.process_request(
+        html_response = self.mw.process_request(
             request=selenium_request,
             spider=None
         )
@@ -126,7 +151,7 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
             script='document.title = "scrapy_selenium";'
         )
 
-        html_response = self.selenium_middleware.process_request(
+        html_response = self.mw.process_request(
             request=selenium_request,
             spider=None
         )
