@@ -73,7 +73,7 @@ class SeleniumMiddleware:
         driver_executable_path = crawler.settings.get('SELENIUM_DRIVER_EXECUTABLE_PATH')
         browser_executable_path = crawler.settings.get('SELENIUM_BROWSER_EXECUTABLE_PATH')
         command_executor = crawler.settings.get('SELENIUM_COMMAND_EXECUTOR')
-        driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
+        driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS', [])
 
         if driver_name is None:
             raise NotConfigured('SELENIUM_DRIVER_NAME must be set')
@@ -99,6 +99,8 @@ class SeleniumMiddleware:
 
         if not isinstance(request, SeleniumRequest):
             return None
+
+        request.unpack_meta()
 
         self.driver.get(request.url)
 
@@ -137,4 +139,3 @@ class SeleniumMiddleware:
         """Shutdown the driver when spider is closed"""
 
         self.driver.quit()
-
