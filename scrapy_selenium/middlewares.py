@@ -100,7 +100,11 @@ class SeleniumMiddleware:
         if not isinstance(request, SeleniumRequest):
             return None
 
-        self.driver.get(request.url)
+        if callable(request.cb_selenium):
+            kwargs = request.cb_selenium_kwargs if request.cb_selenium_kwargs else {}
+            request.cb_selenium(request.url, self.driver, **kwargs)
+        else:
+            self.driver.get(request.url)
 
         for cookie_name, cookie_value in request.cookies.items():
             self.driver.add_cookie(

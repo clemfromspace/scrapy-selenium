@@ -57,7 +57,7 @@ def parse_result(self, response):
 ```
 
 ### Additional arguments
-The `scrapy_selenium.SeleniumRequest` accept 4 additional arguments:
+The `scrapy_selenium.SeleniumRequest` accept 6 additional arguments:
 
 #### `wait_time` / `wait_until`
 
@@ -95,5 +95,29 @@ yield SeleniumRequest(
     url=url,
     callback=self.parse_result,
     script='window.scrollTo(0, document.body.scrollHeight);',
+)
+```
+
+#### `cb_selenium` / `cb_selenium_kwargs`
+When used, the callback is called instead of `webdriver.get(request.url)`. It allows you more
+control to put the webpage to the given state that you expected.
+```python
+def cb_selenium(url, webdriver, arg1):
+    wait = WebDriverWait(webdriver, timeout=10)
+    webdriver.get(url)
+
+    btn = wait.until(
+        EC.element_to_be_clickable((By.XPATH, "//button[@class='button']"))
+    )
+    btn.click()
+
+    wait.until(EC.visibility_of_element_located((By.ID, arg1)))
+
+
+yield SeleniumRequest(
+    url=url,
+    callback=self.parse_result,
+    cb_selenium=cb_selenium,
+    cb_selenium_kwargs={"arg1": "123456"},
 )
 ```
