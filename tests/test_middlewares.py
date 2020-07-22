@@ -5,6 +5,11 @@ from unittest.mock import patch
 from scrapy import Request
 from scrapy.crawler import Crawler
 
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
 from scrapy_selenium.http import SeleniumRequest
 from scrapy_selenium.middlewares import SeleniumMiddleware
 
@@ -134,4 +139,36 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
         self.assertEqual(
             html_response.selector.xpath('//title/text()').extract_first(),
             'scrapy_selenium'
+        )
+
+    def test_process_request_should_execute_cb_selenium(self):
+        """Test that the ``process_request`` should execute cb_selenium and return a response"""
+
+        def cb_selenium(url, webdriver, query):
+            wait = WebDriverWait(webdriver, timeout=10)
+
+            webdriver.get(url)
+
+            elt = wait.until(ec.visibility_of_element_located((By.ID, "id-search-field")))
+            elt.send_keys(query + Keys.ENTER)
+
+            wait.until(ec.visibility_of_element_located(
+                (By.XPATH, "//ul[@class='list-recent-events menu']")
+            ))
+
+        selenium_request = SeleniumRequest(
+            url='http://www.python.org',
+            cb_selenium=cb_selenium,
+            cb_selenium_kwargs={"query": "python"}
+        )
+
+        html_response = self.selenium_middleware.process_request(
+            request=selenium_request,
+            spider=None
+        )
+
+        titles_xpath = "//ul[@class='list-recent-events menu']/li/h3/a/text()"
+        self.assertIn(
+            "python",
+            html_response.selector.xpath(titles_xpath).extract_first().lower()
         )
