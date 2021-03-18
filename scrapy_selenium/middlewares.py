@@ -121,6 +121,9 @@ class SeleniumMiddleware:
         if request.script:
             self.driver.execute_script(request.script)
 
+        if interact_func := request.interact:
+            request.meta['interact_data'] = interact_func(self.driver)
+        
         body = str.encode(self.driver.page_source)
 
         # Expose the driver via the "meta" attribute
