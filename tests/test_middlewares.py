@@ -2,8 +2,12 @@
 
 from unittest.mock import patch
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+
 from scrapy import Request
 from scrapy.crawler import Crawler
+from selenium.webdriver.support.wait import WebDriverWait
 
 from scrapy_selenium.http import SeleniumRequest
 from scrapy_selenium.middlewares import SeleniumMiddleware
@@ -135,3 +139,27 @@ class SeleniumMiddlewareTestCase(BaseScrapySeleniumTestCase):
             html_response.selector.xpath('//title/text()').extract_first(),
             'scrapy_selenium'
         )
+
+    def test_process_request_should_execute_interact_if_interact_option(self):
+        """Test that the ``process_request`` should execute the script and return a response"""
+        
+        def page_interact(driver):
+            el = driver.find_element(By.CSS_SELECTOR, '#downloads')
+            ActionChains(driver).move_to_element(el).perform()
+            
+            # fake dynamic loading
+            dl_url =  WebDriverWait(driver, timeout=30).until(lambda d: d.find_element(By.CSS_SELECTOR, '#downloads .element-1 a')).get_attribute('href')
+            
+            return {'dl_link': 'fake_url'}
+
+        selenium_request = SeleniumRequest(
+            url='http://www.python.org',
+            interact=page_interact
+        )
+
+        html_response = self.selenium_middleware.process_request(
+            request=selenium_request,
+            spider=None
+        )
+
+        self.assertEqual(html_response.request.meta['interact_data']['dl_link'], 'fake_url')
