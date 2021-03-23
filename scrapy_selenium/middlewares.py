@@ -46,11 +46,6 @@ class SeleniumMiddleware:
         for argument in driver_arguments:
             driver_options.add_argument(argument)
 
-        driver_kwargs = {
-            'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
-        }
-
         # locally installed driver
         if driver_executable_path is not None:
             driver_kwargs = {
@@ -58,6 +53,7 @@ class SeleniumMiddleware:
                 f'{driver_name}_options': driver_options
             }
             self.driver = driver_klass(**driver_kwargs)
+
         # remote driver
         elif command_executor is not None:
             from selenium import webdriver
@@ -121,6 +117,9 @@ class SeleniumMiddleware:
         if request.script:
             self.driver.execute_script(request.script)
 
+        if interact_func := request.interact:
+            request.meta['interact_data'] = interact_func(self.driver)
+        
         body = str.encode(self.driver.page_source)
 
         # Expose the driver via the "meta" attribute

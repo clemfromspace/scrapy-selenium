@@ -97,3 +97,26 @@ yield SeleniumRequest(
     script='window.scrollTo(0, document.body.scrollHeight);',
 )
 ```
+
+#### interact
+
+When used, will call this function with driver as parameter  and the data of this call return will be added to the response `meta`:
+
+```python
+def interact_on_page(driver):
+  radio_all = driver.find_element(By.CSS_SELECTOR, '.some-class a')
+  ActionChains(driver).move_to_element(radio_all).click(radio_all).perform()
+  WebDriverWait(driver, timeout=30).until_not(lambda d: d.find_element(By.CLASS_NAME, '.loading'))
+  data = driver.execute_script('const data={}; ********; return data;')
+	return data
+
+yield SeleniumRequest(
+    url=url,
+    callback=self.parse_result,
+    interact=interact_on_page
+)
+
+def parse_result(self, response):
+    dynamic_data = response.request.meta['interact_data'] 
+```
+
