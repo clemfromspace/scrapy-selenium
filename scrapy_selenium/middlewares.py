@@ -36,27 +36,32 @@ class SeleniumMiddleware:
         driver_klass_module = import_module(f'{webdriver_base_path}.webdriver')
         driver_klass = getattr(driver_klass_module, 'WebDriver')
 
-        driver_options_module = import_module(f'{webdriver_base_path}.options')
-        driver_options_klass = getattr(driver_options_module, 'Options')
+        if driver_name != 'safari':
+            driver_options_module = import_module(f'{webdriver_base_path}.options')
+            driver_options_klass = getattr(driver_options_module, 'Options')
 
-        driver_options = driver_options_klass()
+            driver_options = driver_options_klass()
 
-        if browser_executable_path:
-            driver_options.binary_location = browser_executable_path
-        for argument in driver_arguments:
-            driver_options.add_argument(argument)
-
-        driver_kwargs = {
-            'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
-        }
-
+            if browser_executable_path:
+                driver_options.binary_location = browser_executable_path
+            for argument in driver_arguments:
+                driver_options.add_argument(argument)
+        else:
+            # safari do not have options to configure
+            pass 
+        
+        
         # locally installed driver
         if driver_executable_path is not None:
-            driver_kwargs = {
-                'executable_path': driver_executable_path,
-                f'{driver_name}_options': driver_options
-            }
+            if driver_name != 'safari':
+                driver_kwargs = {
+                    'executable_path': driver_executable_path,
+                    f'{driver_name}_options': driver_options
+                }
+            else:
+               driver_kwargs = {
+                    'executable_path': driver_executable_path
+                } 
             self.driver = driver_klass(**driver_kwargs)
         # remote driver
         elif command_executor is not None:
