@@ -30,3 +30,15 @@ class SeleniumRequest(Request):
         self.script = script
 
         super().__init__(*args, **kwargs)
+
+    def replace(self, *args, **kwargs):
+        """Create a new SeleniumRequest with the same attributes except for those
+        given new values.
+        """
+        selenium_request_keys = ['wait_time', 'wait_until', 'screenshot', 'script']
+        scrapy_request_keys = ['url', 'method', 'headers', 'body', 'cookies', 'meta', 'flags',
+                  'encoding', 'priority', 'dont_filter', 'callback', 'errback', 'cb_kwargs']
+        for x in selenium_request_keys + scrapy_request_keys:
+            kwargs.setdefault(x, getattr(self, x))
+        cls = kwargs.pop('cls', self.__class__)
+        return cls(*args, **kwargs)
