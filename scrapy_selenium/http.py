@@ -24,9 +24,12 @@ class SeleniumRequest(Request):
 
         """
 
-        self.wait_time = wait_time
-        self.wait_until = wait_until
-        self.screenshot = screenshot
-        self.script = script
-
+        meta = {
+            "wait_time": wait_time,
+            "wait_until": wait_until,
+            "screenshot": screenshot,
+            "script": script,
+        }
+        meta.update(kwargs.pop("meta", {}))
+        kwargs["meta"] = meta
         super().__init__(*args, **kwargs)

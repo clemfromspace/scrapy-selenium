@@ -110,16 +110,16 @@ class SeleniumMiddleware:
                 }
             )
 
-        if request.wait_until:
-            WebDriverWait(self.driver, request.wait_time).until(
-                request.wait_until
+        if request.meta.get('wait_until'):
+            WebDriverWait(self.driver, request.meta.get('wait_time')).until(
+                request.meta.get('wait_until')
             )
 
-        if request.screenshot:
+        if request.meta.get('screenshot'):
             request.meta['screenshot'] = self.driver.get_screenshot_as_png()
 
-        if request.script:
-            self.driver.execute_script(request.script)
+        if request.meta.get('script'):
+            self.driver.execute_script(request.meta.get('script'))
 
         body = str.encode(self.driver.page_source)
 
