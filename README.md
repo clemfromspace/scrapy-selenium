@@ -17,7 +17,7 @@ You will also need one of the Selenium [compatible browsers](http://www.selenium
 
     SELENIUM_DRIVER_NAME = 'firefox'
     SELENIUM_DRIVER_EXECUTABLE_PATH = which('geckodriver')
-    SELENIUM_DRIVER_ARGUMENTS=['-headless']  # '--headless' if using chrome instead of firefox
+    SELENIUM_DRIVER_ARGUMENTS = ['-headless']  # '--headless' if using chrome instead of firefox
     ```
 
 Optionally, set the path to the browser executable:
