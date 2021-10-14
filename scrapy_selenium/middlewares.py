@@ -14,7 +14,8 @@ class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
     def __init__(self, driver_name, driver_executable_path,
-        browser_executable_path, command_executor, driver_arguments):
+        browser_executable_path, command_executor, driver_arguments,
+        driver_experimental_options=None):
         """Initialize the selenium webdriver
 
         Parameters
@@ -29,6 +30,8 @@ class SeleniumMiddleware:
             The path of the executable binary of the browser
         command_executor: str
             Selenium remote server endpoint
+        driver_experimental_options: dict of dicts
+            Options to pass to experimental_options of the web driver
         """
 
         webdriver_base_path = f'selenium.webdriver.{driver_name}'
@@ -45,17 +48,15 @@ class SeleniumMiddleware:
             driver_options.binary_location = browser_executable_path
         for argument in driver_arguments:
             driver_options.add_argument(argument)
-
-        driver_kwargs = {
-            'executable_path': driver_executable_path,
-            f'{driver_name}_options': driver_options
-        }
+        if driver_experimental_options is not None:
+            for key, options in driver_experimental_options.items():
+                driver_options.add_experimental_option(key, options)
 
         # locally installed driver
         if driver_executable_path is not None:
             driver_kwargs = {
                 'executable_path': driver_executable_path,
-                f'{driver_name}_options': driver_options
+                f'options': driver_options
             }
             self.driver = driver_klass(**driver_kwargs)
         # remote driver
@@ -74,6 +75,7 @@ class SeleniumMiddleware:
         browser_executable_path = crawler.settings.get('SELENIUM_BROWSER_EXECUTABLE_PATH')
         command_executor = crawler.settings.get('SELENIUM_COMMAND_EXECUTOR')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
+        driver_experimental_options = crawler.settings.get('SELENIUM_DRIVER_EXPERIMENTAL_OPTIONS')
 
         if driver_name is None:
             raise NotConfigured('SELENIUM_DRIVER_NAME must be set')
@@ -87,7 +89,8 @@ class SeleniumMiddleware:
             driver_executable_path=driver_executable_path,
             browser_executable_path=browser_executable_path,
             command_executor=command_executor,
-            driver_arguments=driver_arguments
+            driver_arguments=driver_arguments,
+            driver_experimental_options=driver_experimental_options
         )
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
