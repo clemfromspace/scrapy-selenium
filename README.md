@@ -59,7 +59,7 @@ def parse_result(self, response):
 ### Additional arguments
 The `scrapy_selenium.SeleniumRequest` accept 4 additional arguments:
 
-#### `wait_time` / `wait_until`
+#### `timeout` / `until`
 
 When used, selenium will perform an [Explicit wait](http://selenium-python.readthedocs.io/waits.html#explicit-waits) before returning the response to the spider.
 ```python
@@ -69,8 +69,8 @@ from selenium.webdriver.support import expected_conditions as EC
 yield SeleniumRequest(
     url=url,
     callback=self.parse_result,
-    wait_time=10,
-    wait_until=EC.element_to_be_clickable((By.ID, 'someid'))
+    timeout=10,
+    until=EC.element_to_be_clickable((By.ID, 'someid'))
 )
 ```
 

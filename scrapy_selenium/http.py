@@ -6,14 +6,14 @@ from scrapy import Request
 class SeleniumRequest(Request):
     """Scrapy ``Request`` subclass providing additional arguments"""
 
-    def __init__(self, wait_time=None, wait_until=None, screenshot=False, script=None, *args, **kwargs):
+    def __init__(self, timeout=None, until=None, screenshot=False, script=None, *args, **kwargs):
         """Initialize a new selenium request
 
         Parameters
         ----------
-        wait_time: int
+        timeout: float
             The number of seconds to wait.
-        wait_until: method
+        until: method
             One of the "selenium.webdriver.support.expected_conditions". The response
             will be returned until the given condition is fulfilled.
         screenshot: bool
@@ -24,8 +24,8 @@ class SeleniumRequest(Request):
 
         """
 
-        self.wait_time = wait_time
-        self.wait_until = wait_until
+        self.timeout = timeout
+        self.until = until
         self.screenshot = screenshot
         self.script = script
 
