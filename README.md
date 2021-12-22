@@ -50,6 +50,29 @@ def parse_result(self, response):
 ```
 For more information about the available driver methods and attributes, refer to the [selenium python documentation](http://selenium-python.readthedocs.io/api.html#module-selenium.webdriver.remote.webdriver)
 
+Ideally you do not want any driver actions to be used during response parsing since scrapy design is that responses and requests are asynchronous and this package only utilizes a single webdriver. But sometimes you require that user actions such as clicks, forms, etc be done after request but prior to parsing so that response object has all data you intend to scrape. Here is a solution that may help in those circumstances:
+
+   1. create custom selenium wait condition (https://selenium-python.readthedocs.io/waits.html)
+ ```python
+ class wait_title(object):
+  def __init__(self):
+      self.params = "string"
+
+  def __call__(self, driver):
+      # driver actions go here ... 
+      title = driver.title
+      if title == self.params:
+          return title #technically not matter what you return since this package ignores it anyways ... just no boolean if success condition
+      else
+          return False #if returns false then continues waiting and will run this function again after some delay
+ ```
+   2. then supply this custom wait condition to selenium request like so:
+```python
+SeleniumRequest(url=url, callback=self.parse, wait_until=wait_title(), wait_time=10)
+```
+
+This will ensure that a given request performs all requisite driver actions before formulating a response object to be parse asynchronously.
+
 The `selector` response attribute work as usual (but contains the html processed by the selenium driver).
 ```python
 def parse_result(self, response):
