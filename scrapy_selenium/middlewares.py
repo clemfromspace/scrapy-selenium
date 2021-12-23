@@ -14,7 +14,7 @@ class SeleniumMiddleware:
     """Scrapy middleware handling the requests using selenium"""
 
     def __init__(self, driver_name, driver_executable_path,
-        browser_executable_path, command_executor, driver_arguments, experimental_options):
+        browser_executable_path, command_executor, driver_arguments, experimental_options, extensions):
         """Initialize the selenium webdriver
 
         Parameters
@@ -47,6 +47,8 @@ class SeleniumMiddleware:
             driver_options.add_argument(argument)
         for option, value in experimental_options.items():
             driver_options.add_experimental_option(option, value)
+        for extension in extensions:
+            driver_options.add_extension(extension)
 
         driver_kwargs = {
             'executable_path': driver_executable_path,
@@ -77,6 +79,7 @@ class SeleniumMiddleware:
         command_executor = crawler.settings.get('SELENIUM_COMMAND_EXECUTOR')
         driver_arguments = crawler.settings.get('SELENIUM_DRIVER_ARGUMENTS')
         driver_experimental_options = crawler.settings.get('SELENIUM_EXPERIMENTAL_OPTIONS', {})
+        driver_extensions = crawler.settings.get('SELENIUM_EXTENSIONS', [])
 
         if driver_name is None:
             raise NotConfigured('SELENIUM_DRIVER_NAME must be set')
@@ -91,7 +94,8 @@ class SeleniumMiddleware:
             browser_executable_path=browser_executable_path,
             command_executor=command_executor,
             driver_arguments=driver_arguments,
-            experimental_options=driver_experimental_options
+            experimental_options=driver_experimental_options,
+            extensions=driver_extensions
         )
 
         crawler.signals.connect(middleware.spider_closed, signals.spider_closed)
